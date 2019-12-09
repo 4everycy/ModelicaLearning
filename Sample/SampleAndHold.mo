@@ -39,6 +39,7 @@ equation
     end when;
 end SampleAndHold;
 
+
 model IntervalMeasure
     extends SecondOrder;
     parameter Integer teeth=200;
@@ -58,3 +59,28 @@ equation
         lastTime = time;
     end when;
 end IntervalMeasure;
+
+
+model Counter
+    extends SecondOrder;
+    parameter Real SampleTime(unit="s")=0.125;
+    parameter Integer teeth=200;
+    parameter Real toothAngle(unit="rad")=2*3.14159/teeth;
+    Real nextPhi, prevPhi;
+    Integer count;
+    Real omega1Measured;
+initial equation
+    nextPhi = phi1 + toothAngle;
+    prevPhi = phi1 - toothAngle;
+    count = 0;
+algorithm
+    when {phi1 >= pre(nextPhi), phi1 <= pre(prevPhi)} then
+        nextPhi := phi1 + toothAngle;
+        prevPhi := phi1 - toothAngle;
+        count := pre(count) + 1;
+    end when;
+    when sample(0, SampleTime) then
+        omega1Measured := pre(count) * toothAngle / SampleTime;
+        count := 0;
+    end when;
+end Counter;
